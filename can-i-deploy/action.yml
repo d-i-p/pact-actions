@@ -15,13 +15,19 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: publish consumer pacts if PRs
-      if: github.event_name == 'pull_request'
-      run: docker run --rm -v ${{ inputs.pacts-folder }}:/pacts pactfoundation/pact-cli broker publish /pacts/ --consumer-app-version ${GITHUB_SHA::7} --tag ${{ github.head_ref }} --broker-base-url=${{ inputs.broker-url }}
-  
-    - name: publish consumer pacts if main branch
-      if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
-      run: docker run --rm -v ${{ inputs.pacts-folder }}:/pacts pactfoundation/pact-cli broker publish /pacts/ --consumer-app-version ${GITHUB_SHA::7} --tag main --tag master --broker-base-url=${{ inputs.broker-url }}
+    - name: generate pact tags
+      shell: bash
+      run: |
+        if [[ "${{github.ref}}" == "refs/heads/main" || "${{github.ref}}" == "refs/heads/master" ]]; then
+          echo 'PACT_TAG_ARGS="--tag main --tag master" >> $GITHUB_ENV'
+        else
+          echo 'PACT_TAG_ARGS="--tag ${{ github.head_ref }}" >> $GITHUB_ENV'
+        fi
+
+    - name: publish consumer pacts
+      shell: bash
+      run: docker run --rm -v ${{ inputs.pacts-folder }}:/pacts pactfoundation/pact-cli broker publish /pacts/ --consumer-app-version ${GITHUB_SHA::7} ${PACT_TAG_ARGS} --broker-base-url=${{ inputs.broker-url }}
 
     - name: can-i-deploy
+      shell: bash
       run: docker run --rm pactfoundation/pact-cli broker can-i-deploy --pacticipant ${{ inputs.pacticipant-name }} --version ${GITHUB_SHA::7} --to prod --retry-while-unknown=30 --retry-interval=10 --broker-base-url=${{ inputs.broker-url }}

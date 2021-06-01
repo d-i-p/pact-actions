@@ -13,4 +13,5 @@ runs:
   using: "composite"
   steps:
     - name: tag pacticipant version with prod
+      shell: bash
       run: docker run --rm pactfoundation/pact-cli broker create-version-tag --pacticipant ${{ inputs.pacticipant-name }} --version ${GITHUB_SHA::7} --tag prod  --broker-base-url=${{ inputs.broker-url }}
