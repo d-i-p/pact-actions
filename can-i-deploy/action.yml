@@ -1,0 +1,27 @@
+name: 'Pact can-i-deploy'
+description: 'Verifies wether the pact consumer can be deployed'
+
+inputs:
+  pacticipant-name:
+    description: 'The name of the consumer'
+    required: true
+  pacts-folder:
+    description: 'The path to the folder where all the pact contract files are located'
+    default: ./pacts
+  broker-url:
+    description: 'The URL to the pact broker'
+    required: https://pact-broker.private.element.in
+
+runs:
+  using: "composite"
+  steps:
+    - name: publish consumer pacts if PRs
+      if: github.event_name == 'pull_request'
+      run: docker run --rm -v ${{ inputs.pacts-folder }}:/pacts pactfoundation/pact-cli broker publish /pacts/ --consumer-app-version ${GITHUB_SHA::7} --tag ${{ github.head_ref }} --broker-base-url=${{ inputs.broker-url }}
+  
+    - name: publish consumer pacts if main branch
+      if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+      run: docker run --rm -v ${{ inputs.pacts-folder }}:/pacts pactfoundation/pact-cli broker publish /pacts/ --consumer-app-version ${GITHUB_SHA::7} --tag main --tag master --broker-base-url=${{ inputs.broker-url }}
+
+    - name: can-i-deploy
+      run: docker run --rm pactfoundation/pact-cli broker can-i-deploy --pacticipant ${{ inputs.pacticipant-name }} --version ${GITHUB_SHA::7} --to prod --retry-while-unknown=30 --retry-interval=10 --broker-base-url=${{ inputs.broker-url }}
