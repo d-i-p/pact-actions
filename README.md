@@ -40,7 +40,7 @@ jobs:
       - uses: d-i-p/pact-actions/can-i-deploy@main
         with:
           pacticipant-name: ${{ env.PACTICIPANT_NAME }}
-          pacts-folder: pacts
+          pacts-folder: ${{ github.workspace }}/pacts
           broker-url: ${{ env.PACT_BROKER_URL }}
   
   deploy:
