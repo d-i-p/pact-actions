@@ -20,21 +20,22 @@ runs:
   using: "composite"
   steps:
     - name: generate pact tags
+      id: tags
       shell: bash
       run: |
         if [[ "${{github.ref}}" == "refs/heads/main" || "${{github.ref}}" == "refs/heads/master" ]]; then
-          echo 'PACT_TAG_ARGS="--tag main --tag master" >> $GITHUB_ENV'
+          echo '::set-output name=tag-args::--tag main --tag master'
         else
-          echo 'PACT_TAG_ARGS="--tag ${{ github.head_ref }}" >> $GITHUB_ENV'
+          echo '::set-output name=tag-args::--tag ${{github.head_ref}}'
         fi
 
     - name: debug
       shell: bash
-      run: echo "pact tag args $PACT_TAG_ARGS"
+      run: echo "pact tag args ${{ steps.tags.outputs.tag-args }}"
 
     - name: publish consumer pacts
       shell: bash
-      run: docker run --rm -e PACT_BROKER_USERNAME=$PACT_BROKER_USERNAME -e PACT_BROKER_PASSWORD=$PACT_BROKER_PASSWORD -v ${{ inputs.pacts-folder }}:/pacts pactfoundation/pact-cli broker publish /pacts/ --consumer-app-version ${GITHUB_SHA::7} ${PACT_TAG_ARGS} --broker-base-url=${{ inputs.broker-url }}
+      run: docker run --rm -e PACT_BROKER_USERNAME=$PACT_BROKER_USERNAME -e PACT_BROKER_PASSWORD=$PACT_BROKER_PASSWORD -v ${{ inputs.pacts-folder }}:/pacts pactfoundation/pact-cli broker publish /pacts/ --consumer-app-version ${GITHUB_SHA::7} ${{ steps.tags.outputs.tag-args }} --broker-base-url=${{ inputs.broker-url }}
       env:
         PACT_BROKER_USERNAME: ${{ inputs.broker-username }}
         PACT_BROKER_PASSWORD: ${{ inputs.broker-password }}
