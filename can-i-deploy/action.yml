@@ -1,16 +1,20 @@
-name: 'Pact can-i-deploy'
-description: 'Verifies wether the pact consumer can be deployed'
+name: "Pact can-i-deploy"
+description: "Verifies wether the pact consumer can be deployed"
 
 inputs:
   pacticipant-name:
-    description: 'The name of the consumer'
+    description: "The name of the consumer"
     required: true
   pacts-folder:
-    description: 'The path to the folder where all the pact contract files are located'
+    description: "The path to the folder where all the pact contract files are located"
     required: true
   broker-url:
-    description: 'The URL to the pact broker'
+    description: "The URL to the pact broker"
     required: https://pact-broker.private.element.in
+  broker-username:
+    description: "The username for authenticating against the pact-broker"
+  broker-password:
+    description: "The password for authenticating against the pact-broker"
 
 runs:
   using: "composite"
@@ -27,7 +31,13 @@ runs:
     - name: publish consumer pacts
       shell: bash
       run: docker run --rm -v ${{ inputs.pacts-folder }}:/pacts pactfoundation/pact-cli broker publish /pacts/ --consumer-app-version ${GITHUB_SHA::7} ${PACT_TAG_ARGS} --broker-base-url=${{ inputs.broker-url }}
+      env:
+        PACT_BROKER_USERNAME: ${{ inputs.broker-username }}
+        PACT_BROKER_PASSWORD: ${{ inputs.broker-password }}
 
     - name: can-i-deploy
       shell: bash
       run: docker run --rm pactfoundation/pact-cli broker can-i-deploy --pacticipant ${{ inputs.pacticipant-name }} --version ${GITHUB_SHA::7} --to prod --retry-while-unknown=30 --retry-interval=10 --broker-base-url=${{ inputs.broker-url }}
+      env:
+        PACT_BROKER_USERNAME: ${{ inputs.broker-username }}
+        PACT_BROKER_PASSWORD: ${{ inputs.broker-password }}

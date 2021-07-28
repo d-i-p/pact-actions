@@ -1,13 +1,17 @@
-name: 'Pact mark as deployed to production'
-description: 'Marks the current version as deployed to production in the pact broker'
+name: "Pact mark as deployed to production"
+description: "Marks the current version as deployed to production in the pact broker"
 
 inputs:
   pacticipant-name:
-    description: 'The name of the consumer'
+    description: "The name of the consumer"
     required: true
   broker-url:
-    description: 'The URL to the pact broker'
+    description: "The URL to the pact broker"
     required: https://pact-broker.private.element.in
+  broker-username:
+    description: "The username for authenticating against the pact-broker"
+  broker-password:
+    description: "The password for authenticating against the pact-broker"
 
 runs:
   using: "composite"
@@ -15,3 +19,6 @@ runs:
     - name: tag pacticipant version with prod
       shell: bash
       run: docker run --rm pactfoundation/pact-cli broker create-version-tag --pacticipant ${{ inputs.pacticipant-name }} --version ${GITHUB_SHA::7} --tag prod  --broker-base-url=${{ inputs.broker-url }}
+      env:
+        PACT_BROKER_USERNAME: ${{ inputs.broker-username }}
+        PACT_BROKER_PASSWORD: ${{ inputs.broker-password }}
