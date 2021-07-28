@@ -28,6 +28,10 @@ runs:
           echo 'PACT_TAG_ARGS="--tag ${{ github.head_ref }}" >> $GITHUB_ENV'
         fi
 
+    - name: debug
+      shell: bash
+      run: echo "pact tag args $PACT_TAG_ARGS"
+
     - name: publish consumer pacts
       shell: bash
       run: docker run --rm -e PACT_BROKER_USERNAME=$PACT_BROKER_USERNAME -e PACT_BROKER_PASSWORD=$PACT_BROKER_PASSWORD -v ${{ inputs.pacts-folder }}:/pacts pactfoundation/pact-cli broker publish /pacts/ --consumer-app-version ${GITHUB_SHA::7} ${PACT_TAG_ARGS} --broker-base-url=${{ inputs.broker-url }}
