@@ -1,5 +1,10 @@
 # pact action
 
+**ATTENTION**: The actions in this repositoy were disabled, they do not perform any actions anymore.
+
+We will remove this repository in the future. Until then, projects that still use this action
+will not fail.
+
 Several github actions to simplify working with pact tests in github action workflows.
 
 **Please note that this repository is public so it can be accessed by github actions**
